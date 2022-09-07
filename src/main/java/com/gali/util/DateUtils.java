@@ -3,6 +3,8 @@ package com.gali.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.temporal.TemporalAdjusters;
@@ -15,7 +17,9 @@ import java.time.temporal.TemporalAdjusters;
  */
 public class DateUtils {
 
-    private static String[] weekDays = { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"};
+    private static SimpleDateFormat parse = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+
+    private static String[] weekDays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
 
     private final static Logger logger = LoggerFactory.getLogger(DateUtils.class);
 
@@ -47,7 +51,7 @@ public class DateUtils {
      * 日期相隔天数
      */
     public static long betweenDays(LocalDate startDateInclusive, LocalDate endDateExclusive) {
-        return endDateExclusive.toEpochDay() - startDateInclusive.toEpochDay();
+        return Math.abs(endDateExclusive.toEpochDay() - startDateInclusive.toEpochDay());
     }
 
     /**
@@ -62,11 +66,22 @@ public class DateUtils {
         int month = localDate.getMonth().getValue();
         int day = localDate.getDayOfMonth();
         int week = localDate.getDayOfWeek().getValue();
-        return year + "年" + month + "月" + day + "日  " + weekDays[week];
+        return year + "年" + month + "月" + day + "日  " + weekDays[week - 1];
+    }
+
+    public static int getDate(String dateTime) throws ParseException {
+        return (int)(parse.parse(dateTime).getTime() / 1000);
     }
 
     public static void main(String[] args) {
-        logger.info(getDate());
+        LocalDate of = LocalDate.of(2022, 7, 8);
+        LocalDate of1 = LocalDate.of(2022, 8, 23);
+        LocalDate of2 = LocalDate.of(2022, 8, 22);
+        LocalDate of3 = LocalDate.of(2022, 7, 14);
+        long betweenDays = DateUtils.betweenDays(of, of1);
+        long betweenDays1 = DateUtils.betweenDays(of2, of3);
+        System.out.println(betweenDays);
+        System.out.println(betweenDays1);
     }
 
 }

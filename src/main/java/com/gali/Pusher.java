@@ -1,8 +1,6 @@
 package com.gali;
 
-import com.gali.module.GlowingTerms;
-import com.gali.module.MemorialDay;
-import com.gali.module.Weather;
+import com.gali.module.*;
 import com.gali.util.DateUtils;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.api.impl.WxMpServiceImpl;
@@ -17,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class Pusher {
@@ -34,16 +33,18 @@ public class Pusher {
     @Autowired
     private GlowingTerms glowingTerms;
 
-    public void push(String openId) {
-        //1,配置
-        WxMpDefaultConfigImpl wxStorage = new WxMpDefaultConfigImpl();
-        wxStorage.setAppId(this.config.getAppId());
-        wxStorage.setSecret(this.config.getSecret());
-        WxMpService wxMpService = new WxMpServiceImpl();
-        wxMpService.setWxMpConfigStorage(wxStorage);
+    @Autowired
+    private Constellation constellation;
+
+    @Autowired
+    private Lyrics lyrics;
+
+    @Autowired
+    private WxMpService wxMpService;
+
+    public void push() {
         //2,推送消息
         WxMpTemplateMessage templateMessage = WxMpTemplateMessage.builder()
-                .toUser(openId)
                 .templateId(this.config.getTemplateId())
                 //.url("https://30paotui.com/")//点击模版消息要访问的网址
                 .build();
@@ -76,22 +77,165 @@ public class Pusher {
             e.printStackTrace();
         }
         // endregion
-        // region彩虹屁
-        try{
-            String glowingTerms = this.glowingTerms.getGlowingTerms();
-            templateMessage.addData(new WxMpTemplateData("glowingTerms", glowingTerms, "#FFBBA5"));
-        } catch (Exception e) {
-            logger.error("彩虹屁出错啦！快回来修！");
-        }
+        // region彩虹屁 不要了
+//        try{
+//            String glowingTerms = this.glowingTerms.getGlowingTerms();
+//            templateMessage.addData(new WxMpTemplateData("glowingTerms", glowingTerms, "#FFBBA5"));
+//        } catch (Exception e) {
+//            logger.error("彩虹屁出错啦！快回来修！");
+//        }
+        // endregion
+
+        // region 歌词
+        String songsLrc = lyrics.getSongsLrc();
+        templateMessage.addData(new WxMpTemplateData("glowingTerms", songsLrc, "#FFBBA5"));
+        // endregion
+
+        // region 幸运色
+//        String constellationColor = this.constellation.getConstellationColor();
+//        if (!constellationColor.isEmpty()) {
+//            templateMessage.addData(new WxMpTemplateData("luckyColor", constellationColor));
+//        }
         // endregion
 
         try {
-            System.out.println(templateMessage.toJson());
-            System.out.println(wxMpService.getTemplateMsgService().sendTemplateMsg(templateMessage));
+            logger.info(templateMessage.toJson());
+            Set<String> openIds = config.getOpenIds();
+            for (String openId : openIds) {
+                templateMessage.setToUser(openId);
+                this.wxMpService.getTemplateMsgService().sendTemplateMsg(templateMessage);
+            }
         } catch (Exception e) {
             logger.error("推送失败：{}", e.getMessage());
             e.printStackTrace();
         }
     }
 
+    /**
+     * 晚上下班推送
+     */
+    public void pushAtNight() {
+        String templateId = "zLxckb7gKw8oWWr0fs1c6tkur3kC41wDYGfZU7Q47yM";
+        //2,推送消息
+        WxMpTemplateMessage templateMessage = WxMpTemplateMessage.builder()
+                .templateId(templateId)
+                //.url("https://30paotui.com/")//点击模版消息要访问的网址
+                .build();
+        //3,如果是正式版发送模版消息，这里需要配置你的信息
+        //        templateMessage.addData(new WxMpTemplateData("name", "value", "#FF00FF"));
+        //                templateMessage.addData(new WxMpTemplateData(name2, value2, color2));
+        //填写变量信息
+        templateMessage.addData(new WxMpTemplateData("hesuan", "核酸", "#990000"));
+
+        // region彩虹屁
+//        try{
+//            String glowingTerms = this.glowingTerms.getGlowingTerms();
+//            templateMessage.addData(new WxMpTemplateData("glowingTerms", glowingTerms, "#FFBBA5"));
+//        } catch (Exception e) {
+//            logger.error("彩虹屁出错啦！快回来修！");
+//        }
+        // endregion
+
+        // region 歌词
+        String songsLrc = lyrics.getSongsLrc();
+        templateMessage.addData(new WxMpTemplateData("glowingTerms", songsLrc, "#FFBBA5"));
+        // endregion
+
+        try {
+            logger.info(templateMessage.toJson());
+            for (String openId : config.getOpenIds()) {
+                templateMessage.setToUser(openId);
+                this.wxMpService.getTemplateMsgService().sendTemplateMsg(templateMessage);
+            }
+        } catch (Exception e) {
+            logger.error("推送失败：{}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 周四下午推送
+     */
+    public void pushThursdayAfterNoon() {
+        String templateId = "fq2HJAipJqaVu7IjzICuMM4xaLCg1Np-U7D6JAyHp50";
+        //2,推送消息
+        WxMpTemplateMessage templateMessage = WxMpTemplateMessage.builder()
+                .templateId(templateId)
+                //.url("https://30paotui.com/")//点击模版消息要访问的网址
+                .build();
+        //3,如果是正式版发送模版消息，这里需要配置你的信息
+        //        templateMessage.addData(new WxMpTemplateData("name", "value", "#FF00FF"));
+        //                templateMessage.addData(new WxMpTemplateData(name2, value2, color2));
+        //填写变量信息
+        templateMessage.addData(new WxMpTemplateData("crazy", "疯狂", "#990000"));
+        templateMessage.addData(new WxMpTemplateData("thursday", "星期四", "#CC9900"));
+
+        // region彩虹屁
+//        try{
+//            String glowingTerms = this.glowingTerms.getGlowingTerms();
+//            templateMessage.addData(new WxMpTemplateData("glowingTerms", glowingTerms, "#FFBBA5"));
+//        } catch (Exception e) {
+//            logger.error("彩虹屁出错啦！快回来修！");
+//        }
+        // endregion
+
+        // region 歌词
+        String songsLrc = lyrics.getSongsLrc();
+        templateMessage.addData(new WxMpTemplateData("glowingTerms", songsLrc, "#FFBBA5"));
+        // endregion
+
+        // 幸运色
+
+
+        try {
+            logger.info(templateMessage.toJson());
+            for (String openId : config.getOpenIds()) {
+                templateMessage.setToUser(openId);
+                this.wxMpService.getTemplateMsgService().sendTemplateMsg(templateMessage);
+            }
+        } catch (Exception e) {
+            logger.error("推送失败：{}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 定制提醒
+     */
+    public void pushModify(Set<String> strings) {
+
+        //推送消息
+        WxMpTemplateMessage templateMessage = WxMpTemplateMessage.builder()
+                .templateId("03W3Vb9TTvE1uUcHj68hG0qDFLv7RqPHmMDUFUkpqK4")
+                //.url("https://30paotui.com/")//点击模版消息要访问的网址
+                .build();
+        //3,如果是正式版发送模版消息，这里需要配置你的信息
+        //        templateMessage.addData(new WxMpTemplateData("name", "value", "#FF00FF"));
+        //                templateMessage.addData(new WxMpTemplateData(name2, value2, color2));
+        //填写变量信息
+        // 提醒内容
+
+        StringBuilder stringBuilder = new StringBuilder();
+        int size = strings.size();
+        int i = 1;
+        for (String string : strings) {
+            stringBuilder.append(string);
+            if (i < size) {
+                stringBuilder.append("\n\n");
+            }
+            i++;
+        }
+        templateMessage.addData(new WxMpTemplateData("data", stringBuilder.toString(), "#FE6C3C"));
+
+        try {
+            logger.info(templateMessage.toJson());
+            for (String openId : config.getOpenIds()) {
+                templateMessage.setToUser(openId);
+                this.wxMpService.getTemplateMsgService().sendTemplateMsg(templateMessage);
+            }
+        } catch (Exception e) {
+            logger.error("推送失败：{}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

@@ -32,22 +32,9 @@ public class CommonConfig {
 
     private String glowingTermsUrl;
 
+    private String constellationUrl;
 
-    public String getAppId() {
-        return appId;
-    }
-
-    public void setAppId(String appId) {
-        this.appId = appId;
-    }
-
-    public String getSecret() {
-        return secret;
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
+    private Set<String> lrcSet = new HashSet<>();
 
     public String getTemplateId() {
         return templateId;
@@ -103,5 +90,21 @@ public class CommonConfig {
 
     public void setGlowingTermsUrl(String glowingTermsUrl) {
         this.glowingTermsUrl = glowingTermsUrl;
+    }
+
+    public String getConstellationUrl() {
+        return constellationUrl;
+    }
+
+    public void setConstellationUrl(String constellationUrl) {
+        this.constellationUrl = constellationUrl;
+    }
+
+    public Set<String> getLrcSet() {
+        return lrcSet;
+    }
+
+    public void setLrcSet(Set<String> lrcSet) {
+        this.lrcSet = lrcSet;
     }
 }

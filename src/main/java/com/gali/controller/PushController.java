@@ -2,11 +2,13 @@ package com.gali.controller;
 
 import com.gali.CommonConfig;
 import com.gali.Pusher;
+import com.gali.Schedule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.io.IOException;
 import java.util.Set;
 
 @ResponseBody
@@ -19,15 +21,31 @@ public class PushController {
     @Autowired
     private CommonConfig config;
 
+    @Autowired
+    private Schedule schedule;
+
     /**
      * 微信测试账号推送
      */
     @GetMapping("/push")
     public void push() {
-        Set<String> openIds = config.getOpenIds();
-        for (String openId : openIds) {
-            pusher.push(openId);
-        }
+        pusher.push();
+    }
+
+    /**
+     * 微信测试账号推送
+     */
+    @GetMapping("/pushThursdayAfterNoon")
+    public void pushThursdayAfterNoon() {
+        pusher.pushThursdayAfterNoon();
+    }
+
+    /**
+     * 微信测试账号推送
+     */
+    @GetMapping("/pushAtNight")
+    public void pushAtNight() {
+        pusher.pushAtNight();
     }
 
     /**
@@ -35,6 +53,6 @@ public class PushController {
      */
     @GetMapping("/test")
     public void test() {
-        System.out.println("测试");
+        schedule.scheduledModify();
     }
 }
