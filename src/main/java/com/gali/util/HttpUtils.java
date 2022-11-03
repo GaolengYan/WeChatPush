@@ -47,8 +47,8 @@ public class HttpUtils {
 
     public static void main(String[] args) throws IOException {
 //        String url ="http://localhost:8080/test";
-        String url ="http://43.143.10.20:8080/pushAtNight";
+//        String url ="http://localhost:8080/test";
 //        System.out.println(sendPost(url));
-        System.out.println(sendGet(url));
+//        System.out.println(sendGet(url));
     }
 }

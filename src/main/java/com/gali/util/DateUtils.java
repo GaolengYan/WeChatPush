@@ -73,15 +73,32 @@ public class DateUtils {
         return (int)(parse.parse(dateTime).getTime() / 1000);
     }
 
+    public static int getMonthDiff(LocalDate firstDay, LocalDate secondDay) {
+        boolean after = firstDay.isAfter(secondDay);
+        if (after) {
+            LocalDate temp = secondDay;
+            secondDay = firstDay;
+            firstDay = temp;
+        }
+        int year = firstDay.getYear();
+        int year1 = secondDay.getYear();
+        int betweenYear = year1 - year;
+        int monthDiff = betweenYear * 12;
+        int month = firstDay.getMonthValue();
+        int month1 = secondDay.getMonthValue();
+        if (month1 > month) {
+            monthDiff += month1 - month;
+        } else {
+            monthDiff = monthDiff - (month - month1);
+        }
+        return monthDiff;
+    }
+
     public static void main(String[] args) {
-        LocalDate of = LocalDate.of(2022, 7, 8);
-        LocalDate of1 = LocalDate.of(2022, 8, 23);
-        LocalDate of2 = LocalDate.of(2022, 8, 22);
-        LocalDate of3 = LocalDate.of(2022, 7, 14);
-        long betweenDays = DateUtils.betweenDays(of, of1);
-        long betweenDays1 = DateUtils.betweenDays(of2, of3);
-        System.out.println(betweenDays);
-        System.out.println(betweenDays1);
+        LocalDate of = LocalDate.of(2022, 12, 15);
+        LocalDate of1 = LocalDate.of(2020, 11, 15);
+        int monthDiff = getMonthDiff(of, of1);
+        logger.info("相差{}", monthDiff);
     }
 
 }

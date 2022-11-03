@@ -1,23 +1,25 @@
 package com.gali.controller;
 
-import org.dom4j.Document;
+import com.gali.util.HttpUtils;
+import com.gali.util.MessageUtils;
+import com.gali.util.TextMessage;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.dom4j.DocumentException;
-import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Enumeration;
+import java.net.URLEncoder;
+import java.util.Date;
+import java.util.Map;
 
 /**
  * 接收信息
@@ -26,91 +28,70 @@ import java.util.Enumeration;
  * @version 2022-9-6
  */
 @RequestMapping("/wechat")
+@ResponseBody
 @Controller
 public class ReceiveController {
     private final static Logger logger = LoggerFactory.getLogger(ReceiveController.class);
 
-    private static final String TOKEN = "111111";
-
-    @RequestMapping(value = "/handle", method = RequestMethod.GET)
-    public void messageHandler(HttpServletRequest request, HttpServletResponse response) throws IOException, DocumentException {
-        logger.info("请求进来了...");
-        Enumeration<String> pNames = request.getParameterNames();
-        while (pNames.hasMoreElements()) {
-            String name = pNames.nextElement();
-            String value = request.getParameter(name);
-
-            String log = "name =" + name + " value =" + value;
-            logger.error(log);
-        }
-
+    @RequestMapping(value = "/handle", method = {RequestMethod.GET, RequestMethod.POST})
+    public String messageHandler(HttpServletRequest request, HttpServletResponse response) throws IOException, DocumentException {
+        Map<String, String> resultMap = MessageUtils.parseXml(request);
+        String fromUserName = resultMap.get("FromUserName");
+        String content = resultMap.get("Content");
+        logger.info("{} 发来消息: {}", fromUserName, content);
+        response.setCharacterEncoding("utf-8");
         String signature = request.getParameter("signature");/// 微信加密签名
         String timestamp = request.getParameter("timestamp");/// 时间戳
         String nonce = request.getParameter("nonce"); /// 随机数
-        String echostr = request.getParameter("echostr"); // 随机字符串
-        PrintWriter out = response.getWriter();
 
-        if (checkSignature(signature, timestamp, nonce)) {
-            out.print(echostr);
+        if (!MessageUtils.checkSignature(signature, timestamp, nonce)) {
+            logger.info("TOKEN不一致，拒绝请求");
+            return "";
         }
-        out.close();
+
+        String result = this.doMessageHandler(content, fromUserName);
+
+        TextMessage textMessage = new TextMessage();
+        textMessage.setToUserName(fromUserName);
+        textMessage.setFromUserName(resultMap.get("ToUserName"));
+        Date date = new Date();
+        textMessage.setCreateTime(date.getTime());
+        textMessage.setMsgType(MessageUtils.RESP_MESSAGE_TYPE_TEXT);
+        textMessage.setContent(result);
+        String str = MessageUtils.textMessageToXml(textMessage);
+        logger.info("返回消息:{}", result);
+        return str;
     }
 
-    public static boolean checkSignature(String signature, String timestamp, String nonce) {
-        System.out.println("signature:" + signature + "timestamp:" + timestamp + "nonc:" + nonce);
-        String[] arr = new String[]{TOKEN, timestamp, nonce};
-        // 将token、timestamp、nonce三个参数进行字典序排序
-        Arrays.sort(arr);
-        StringBuilder content = new StringBuilder();
-        for (String s : arr) {
-            content.append(s);
+    private String doMessageHandler(String content, String openId) {
+        String result = "";
+        if (content == null) {
+            return result;
         }
-        MessageDigest md = null;
-        String tmpStr = null;
-
-        try {
-            md = MessageDigest.getInstance("SHA-1");
-        // 将三个参数字符串拼接成一个字符串进行sha1加密
-            byte[] digest = md.digest(content.toString().getBytes());
-            tmpStr = byteToStr(digest);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        switch (content) {
+            case "爱你":
+                result = "我也爱你";
+                break;
+            case "测试":
+                result = "测试完成";
+                break;
+            default:
+                try {
+                    result = chatApi(content);
+                } catch (Exception e) {
+                    result = "不知道你在说些什么";
+                }
         }
-
-        content = null;
-        // 将sha1加密后的字符串可与signature对比，标识该请求来源于微信
-        System.out.println(tmpStr.equals(signature.toUpperCase()));
-        return tmpStr != null ? tmpStr.equals(signature.toUpperCase()) : false;
+        return result;
     }
 
-    /**
-     * 将字节数组转换为十六进制字符串
-     *
-     * @param byteArray
-     * @return
-     */
-    private static String byteToStr(byte[] byteArray) {
-        String strDigest = "";
-        for (int i = 0; i < byteArray.length; i++) {
-            strDigest += byteToHexStr(byteArray[i]);
-        }
-        return strDigest;
-    }
-
-    /**
-     * 将字节转换为十六进制字符串
-     *
-     * @param mByte
-     * @return
-     */
-    private static String byteToHexStr(byte mByte) {
-        char[] Digit = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-        char[] tempArr = new char[2];
-        tempArr[0] = Digit[(mByte >>> 4) & 0X0F];
-        tempArr[1] = Digit[mByte & 0X0F];
-
-        String s = new String(tempArr);
-        return s;
+    private static String chatApi(String content) throws IOException {
+        content = URLEncoder.encode(content, "UTF-8");
+        String url = "http://api.qingyunke.com/api.php?key=free&appid=0&msg=" + content;
+        String result = HttpUtils.sendGet(url);
+        JsonElement jsonElement = JsonParser.parseString(result);
+        JsonObject asJsonObject = jsonElement.getAsJsonObject();
+        return asJsonObject.get("content").getAsString();
     }
 
 }

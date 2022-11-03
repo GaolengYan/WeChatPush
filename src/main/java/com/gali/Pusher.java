@@ -238,4 +238,36 @@ public class Pusher {
             e.printStackTrace();
         }
     }
+
+
+    public void push15ofMonth() {
+
+        //推送消息
+        WxMpTemplateMessage templateMessage = WxMpTemplateMessage.builder()
+                .templateId("o1wUV96O2TrcvTQ-IAICjE7bYKVZSIIpF1PyUIdQPW4")
+                //.url("https://30paotui.com/")//点击模版消息要访问的网址
+                .build();
+        //3,如果是正式版发送模版消息，这里需要配置你的信息
+        //        templateMessage.addData(new WxMpTemplateData("name", "value", "#FF00FF"));
+        //                templateMessage.addData(new WxMpTemplateData(name2, value2, color2));
+        //填写变量信息
+        // 提醒内容
+        LocalDate of1 = LocalDate.of(2020, 11, 15);
+
+        int monthDiff = DateUtils.getMonthDiff(of1, LocalDate.now());
+
+        templateMessage.addData(new WxMpTemplateData("data", String.valueOf(monthDiff), "#FE6C3C"));
+
+        try {
+            logger.info(templateMessage.toJson());
+            for (String openId : config.getOpenIds()) {
+                templateMessage.setToUser(openId);
+                this.wxMpService.getTemplateMsgService().sendTemplateMsg(templateMessage);
+            }
+        } catch (Exception e) {
+            logger.error("推送失败：{}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 }

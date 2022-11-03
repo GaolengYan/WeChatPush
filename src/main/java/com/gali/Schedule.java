@@ -92,5 +92,14 @@ public class Schedule {
         pusher.pushModify(strings);
     }
 
+    /**
+     * 定制提醒
+     * 15号0点检测
+     */
+    @Scheduled(cron = "1 0 0 15 * ?")
+    public void scheduled15() {
+        pusher.push15ofMonth();
+    }
+
 
 }
